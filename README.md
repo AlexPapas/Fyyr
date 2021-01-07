@@ -1,2 +1,2 @@
-# Fyyr
+# Fyyur
 Udacity FSWD first assignment
