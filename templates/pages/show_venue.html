@@ -44,12 +44,13 @@
 		</p>
 		{% endif %}
 
-		<div>
-			<a href="/delete/{{ venue.id }}">
-				<button class="btn btn-danger btn-lg">
-					Delete Venue</button>
-			</a>
-		</div>
+
+		<form>
+
+			<input type="submit" value="Delete Venue" class="btn btn-danger btn-sh " formmethod="POST"
+				formaction="{{ url_for('delete_venue', venue_id=venue.id) }}">
+
+		</form>
 	</div>
 
 	<div class="col-sm-6">
