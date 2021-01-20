@@ -68,23 +68,12 @@ def venues():
 @app.route("/venues/search", methods=["POST"])
 def search_venues():
 
-    search_term = request.form.get("search_term", "")
+    search_term = request.form.get("search_term", "").strip()
+    search = "%{}%".format(search_term)
+    venues = Venue.query.filter(Venue.name.like(search)).all()
 
-    venues = (
-        db.session.query(Venue)
-        .filter(Venue.name.ilike("%" + search_term + "%"))
-        .distinct()
-    )
-    data = []
-    for venue in venues:
-        data.append(
-            {
-                "id": venue.id,
-                "name": venue.name,
-            }
-        )
-
-    response = {"count": len(data), "data": data}
+    venues_names = [i.name for i in venues]
+    response = {"count": len(venues_names), "data": venues}
 
     return render_template(
         "pages/search_venues.html",
@@ -292,20 +281,18 @@ def edit_artist_submission(artist_id):
     form = ArtistForm(request.form)
 
     try:
-        artist = db.session.query(Artist).filter(Artist.id == aritst_id).one()
-
         new_artist = {
-            name: form.name.data,
-            genres: form.genres.data,
-            address: form.address.data,
-            city: form.city.data,
-            state: form.state.data,
-            phone: form.phone.data,
-            website: form.website.data,
-            facebook_link: form.facebook_link.data,
-            seeking_venue: form.seeking_venue.data,
-            seeking_description: form.seeking_description.data,
-            image_link: form.image_link.data,
+            "name": form.name.data,
+            "genres": form.genres.data,
+            "address": form.address.data,
+            "city": form.city.data,
+            "state": form.state.data,
+            "phone": form.phone.data,
+            "website": form.website.data,
+            "facebook_link": form.facebook_link.data,
+            "seeking_venue": form.seeking_venue.data,
+            "seeking_description": form.seeking_description.data,
+            "image_link": form.image_link.data,
         }
 
         db.session.query(Artist).filter(Artist.id == artist_id).update(new_artist)
@@ -347,6 +334,7 @@ def edit_venue_submission(venue_id):
         "image_link": form.image_link.data,
     }
     try:
+        # requires dictionairy as an input
         db.session.query(Venue).filter(Venue.id == venue_id).update(updated_venue)
         db.session.commit()
         flash("Venue" + form.name.data + " was successfully updated!")
@@ -393,23 +381,24 @@ def create_artist_submission():
 @app.route("/shows")
 def shows():
     data = []
-    shows = db.session.query(Show.artist_id, Show.venue_id, Show.start_time).all()
+    all_shows = db.session.query(Show.artist_id, Show.venue_id, Show.start_time).all()
+    # all_shows = Show.query.all()
 
-    for show in shows:
+    for show in all_shows:
         artist = (
             db.session.query(Artist.name, Artist.image_link)
-            .filter(Artist.id == show[0])
+            .filter(Artist.id == show.artist_id)
             .one()
         )
-        venue = db.session.query(Venue.name).filter(Venue.id == show[1]).one()
+        venue = db.session.query(Venue.name).filter(Venue.id == show.venue_id).one()
         data.append(
             {
-                "venue_id": show[1],
-                "venue_name": venue[0],
-                "artist_id": show[0],
-                "artist_name": artist[0],
-                "artist_image_link": artist[1],
-                "start_time": str(show[2]),
+                "venue_id": show.venue_id,
+                "venue_name": venue.name,
+                "artist_id": show.artist_id,
+                "artist_name": artist.name,
+                "artist_image_link": artist.image_link,
+                "start_time": str(show.start_time),
             }
         )
     return render_template("pages/shows.html", shows=data)
@@ -428,13 +417,13 @@ def create_show_submission():
     form = ShowForm(request.form)
 
     try:
-        show = Artist()
-        form.populate_obj(artshowist)
+        show = Show()
+        form.populate_obj(show)
         db.session.add(show)
         db.session.commit()
-        flash("Show " + form.name.data + " was successfully listed!")
+        flash("Show " " was successfully listed!")
     except:
-        flash("An error occurred. Show " + form.name.data + "could not be added")
+        flash("An error occurred. Show could not be added")
     finally:
         db.session.close()
 
