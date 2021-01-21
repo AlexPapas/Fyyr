@@ -268,11 +268,12 @@ def show_artist(artist_id):
 
 #  Update
 #  ----------------------------------------------------------------
+
+
 @app.route("/artists/<int:artist_id>/edit", methods=["GET"])
 def edit_artist(artist_id):
-    form = ArtistForm()
-    artist = db.session.query(Artist).filter(Artist.id == artist_id).one()
-    print(artist)
+    artist = Artist.query.filter_by(id=artist_id).one()
+    form = ArtistForm(obj=artist)
     return render_template("forms/edit_artist.html", form=form, artist=artist)
 
 
@@ -283,8 +284,7 @@ def edit_artist_submission(artist_id):
     try:
         new_artist = {
             "name": form.name.data,
-            "genres": form.genres.data,
-            "address": form.address.data,
+            "genres": form.genres.data, 
             "city": form.city.data,
             "state": form.state.data,
             "phone": form.phone.data,
