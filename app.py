@@ -70,7 +70,7 @@ def search_venues():
 
     search_term = request.form.get("search_term", "").strip()
     search = "%{}%".format(search_term)
-    venues = Venue.query.filter(Venue.name.like(search)).all()
+    venues = Venue.query.filter(Venue.name.ilike(search)).all()
 
     venues_names = [i.name for i in venues]
     response = {"count": len(venues_names), "data": venues}
@@ -84,13 +84,17 @@ def search_venues():
 
 @app.route("/venues/<int:venue_id>")
 def show_venue(venue_id):
-
-    venue = Venue.query.filter(Venue.id == venue_id).one()
+    venue = Venue.query.get(venue_id)
+    # venue = Venue.query.filter(Venue.id == venue_id).one()
     list_shows = (
-        db.session.query(Show.start_time, Show.artist_id)
-        .filter(Show.venue_id == venue_id)
-        .all()
+        db.session.query(Show).join(Artist).filter(Show.venue_id == venue_id).all()
     )
+    # (
+    #     db.session.query(Show.start_time, Show.artist_id)
+    #     .filter(Show.venue_id == venue_id)
+    #     .all()
+    # )
+
     past_shows_list = []
     upcoming_shows_list = []
     for show in list_shows:
@@ -223,7 +227,9 @@ def search_artists():
 def show_artist(artist_id):
 
     artist = Artist.query.filter(Artist.id == artist_id).one()
-    list_shows = db.session.query(Show).filter(Show.artist_id == artist_id).all()
+    list_shows = (
+        db.session.query(Show).join(Artist).filter(Show.artist_id == artist_id).all()
+    )
     past_shows = []
     upcoming_shows = []
 
@@ -284,7 +290,7 @@ def edit_artist_submission(artist_id):
     try:
         new_artist = {
             "name": form.name.data,
-            "genres": form.genres.data, 
+            "genres": form.genres.data,
             "city": form.city.data,
             "state": form.state.data,
             "phone": form.phone.data,
